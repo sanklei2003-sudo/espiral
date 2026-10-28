@@ -1,6 +1,6 @@
 // Service worker do Espiral: funciona offline e busca a versão nova quando há internet.
 // Os dados ficam no localStorage do aparelho, nunca aqui.
-const CACHE = 'espiral-v3';
+const CACHE = 'espiral-v4';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.json',
   './icon.svg', './icon-192.png', './icon-512.png', './icon-180.png'];
 

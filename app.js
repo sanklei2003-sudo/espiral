@@ -20,12 +20,39 @@ const TEMPLATES = {
     ['Publicar 3 trabalhos com estilo, cidade e legenda', 2],
     ['Responder e converter os 5 contatos mais recentes', 1.5],
     ['Medir agendamentos por semana durante 4 semanas', 1]],
+  /* Portfólio de publicidade: baseado em orientações de recrutadores (Meio & Mensagem, Miami Ad School,
+     Shift, Na Prática) e na disciplina de Criação Publicitária (P2 · Portfólio, a partir das entregas B1–B6). */
   portfolio: [
-    ['Escolher 5 peças já feitas que valem ser mostradas', 1.5],
-    ['Listar lacunas: formatos, segmentos ou tipos de peça que faltam', 1],
-    ['Produzir 1 peça autoral para preencher uma lacuna', 8],
-    ['Montar 3 cases com briefing, processo e resultado', 6],
-    ['Enviar o portfólio para 10 contatos da área', 2]],
+    ['Definir foco e juntar referências', 1.5, {
+      how: ['Escolha a área principal: direção de arte, redação, social media ou criação em geral',
+        'Olhe 5 portfólios de publicitários iniciantes no Behance ou no Cargo e anote o que te fez continuar olhando',
+        'Escreva uma frase de posicionamento: "sou ___ e resolvo ___ com ___"'],
+      ok: 'Frase de posicionamento escrita e 5 referências salvas'
+    }],
+    ['Selecionar os 4 a 6 melhores trabalhos', 2, {
+      how: ['Reúna tudo: entregas B1 a B6 de Criação, Lab de Campanha, Social Media e projetos pessoais',
+        'Fique só com o que você teve participação real e corte a peça mais fraca: você é julgado por ela',
+        'Garanta variedade de formatos (título, imagem, manifesto, redes, filme) e anote o que falta'],
+      ok: 'Lista de 4 a 6 projetos em ordem, com o mais forte em primeiro'
+    }],
+    ['Escrever o case de cada projeto', 4, {
+      how: ['Para cada projeto: 1 linha de desafio, o insight, a ideia e as peças',
+        'Diga o seu papel exato (arte, texto, os dois) e com quem fez',
+        'Texto curto: no máximo 80 palavras por case; mostre a campanha, não só uma peça solta'],
+      ok: 'Texto final de todos os cases revisado'
+    }],
+    ['Finalizar as peças e preencher uma lacuna', 6, {
+      how: ['Ajuste as peças com o feedback recebido dos professores',
+        'Use o mesmo padrão de mockup, tamanho e capa em todos os projetos',
+        'Se faltar um formato, crie 1 projeto autoral e deixe claro que é fictício; termine a série inteira'],
+      ok: 'Todas as imagens e vídeos exportados no mesmo padrão (vídeo com até 2 min)'
+    }],
+    ['Montar, revisar e publicar o portfólio', 4, {
+      how: ['Monte no Behance (gratuito) ou no Cargo: melhor projeto primeiro, contato na primeira tela',
+        'Escreva o "sobre mim" em 3 a 4 linhas, com interesses e repertório além da publicidade',
+        'Peça revisão a 2 pessoas (use a orientação de portfólio em aula), gere o PDF e entregue a P2'],
+      ok: 'Link publicado, PDF pronto e P2 entregue'
+    }]],
   conteudo: [
     ['Escolher 1 formato e 1 canal para os próximos 30 dias', 1],
     ['Definir uma pauta de 8 publicações com títulos provisórios', 2],
@@ -45,7 +72,7 @@ const TEMPLATES = {
     ['Executar a primeira entrega', 3],
     ['Revisar o que funcionou e ajustar o próximo passo', 1]]
 };
-const TPL_CAT = { faculdade: 0, tatu: 1, portfolio: 2, conteudo: 2, financas: 3, default: 4 };
+const TPL_CAT = { faculdade: 0, tatu: 1, portfolio: 0, conteudo: 2, financas: 3, default: 4 };
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -80,7 +107,7 @@ function keyOf(text) {
   const t = norm(text);
   if (/faculdade|prova|nota|materia|semestre|estudo/.test(t)) return 'faculdade';
   if (/tatu|estudio|cliente|agendament/.test(t)) return 'tatu';
-  if (/portfolio|vaga|publicidade|agencia|curriculo|networking/.test(t)) return 'portfolio';
+  if (/portf?i?olio|portifolio|behance|vaga|publicidade|agencia|curriculo|networking/.test(t)) return 'portfolio';
   if (/conteudo|youtube|instagram|tiktok|video|canal|post/.test(t)) return 'conteudo';
   if (/financ|dinheiro|reserva|divida|economiz|fundo/.test(t)) return 'financas';
   return 'default';
@@ -150,6 +177,7 @@ function createGoal({ text, cat, result, deadline, steps }) {
   const ids = steps.map(() => uid());
   const built = steps.map((s, i) => ({
     id: ids[i], title: s.title, hours: s.hours, done: !!s.done, milestone: !!s.milestone,
+    how: s.how || [], ok: s.ok || '',
     dependsOn: i > 0 ? [ids[i - 1]] : []
   }));
   const g = {
@@ -249,6 +277,9 @@ function goalHTML(g) {
       </select>
       <button class="sm ghost" data-action="milestone" data-goal="${g.id}" data-step="${s.id}" title="marco" style="${s.milestone ? 'color:var(--warn)' : ''}">★</button>
       <button class="sm ghost danger" data-action="rmstep" data-goal="${g.id}" data-step="${s.id}" title="remover">✕</button>
+      ${s.how?.length || s.ok ? `<details class="howbox"><summary>Como fazer</summary>
+        ${s.how?.length ? `<ol class="how">${s.how.map(h => `<li>${esc(h)}</li>`).join('')}</ol>` : ''}
+        ${s.ok ? `<div class="okline">✓ Pronto quando: ${esc(s.ok)}</div>` : ''}</details>` : ''}
     </div>`).join('');
   return `
     <div class="goalhead">
@@ -289,7 +320,9 @@ function goalHTML(g) {
     <div class="nextcard">
       <div class="info">${nx
         ? `<div class="muted">PRÓXIMO PASSO · etapa ${g.steps.indexOf(nx) + 1} de ${g.steps.length} · ${nx.hours} h</div>
-           <div class="nxt">${esc(nx.title)}</div>`
+           <div class="nxt">${esc(nx.title)}</div>
+           ${nx.how?.length ? `<ol class="how">${nx.how.map(h => `<li>${esc(h)}</li>`).join('')}</ol>` : ''}
+           ${nx.ok ? `<div class="okline">✓ Pronto quando: ${esc(nx.ok)}</div>` : ''}`
         : (progress(g) === 1 ? `<div class="nxt">Caminho concluído ✦</div>` : `<div class="muted">Nenhum passo liberado agora. Confira as dependências abaixo.</div>`)}
       </div>
       ${nx ? `<button class="primary" data-action="done" data-goal="${g.id}" data-step="${nx.id}">Marcar como feito</button>` : ''}
@@ -488,7 +521,7 @@ function wizHTML() {
 }
 function buildSteps() {
   const w = UI.wiz, tpl = TEMPLATES[keyOf(w.text)];
-  return tpl.map(([title, hours], i) => ({ title, hours, done: w.done.includes(i), milestone: i === tpl.length - 1 }));
+  return tpl.map(([title, hours, extra], i) => ({ title, hours, done: w.done.includes(i), milestone: i === tpl.length - 1, how: extra?.how || [], ok: extra?.ok || '' }));
 }
 
 /* Decoração da tela inicial: esferas 3D com as cores do app. */
