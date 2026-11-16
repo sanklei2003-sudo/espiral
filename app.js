@@ -790,6 +790,65 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && UI.goal) { UI.goal = null; render(); }
 });
 
+/* ---------- sincronização com afazeres.json (lista mantida no repositório) ----------
+   Ao abrir (com internet), lê afazeres.json e mescla com os dados do aparelho:
+   - item novo (id nunca visto) é adicionado; nada do aparelho é apagado ou sobrescrito;
+   - item que você excluiu no aparelho não volta (o id fica em S.sync.seen);
+   - "feito": true no arquivo marca o item como feito uma única vez; desmarcar no aparelho vale. */
+async function syncFromRepo() {
+  if (location.protocol === 'file:') return;
+  let data;
+  try {
+    const r = await fetch('afazeres.json', { cache: 'no-store' });
+    if (!r.ok) return;
+    data = await r.json();
+  } catch (e) { return; /* offline ou arquivo ausente: segue com os dados locais */ }
+  if (!Array.isArray(data?.objetivos)) return;
+  S.sync ||= {};
+  const seen = new Set(S.sync.seen || []), doneApplied = new Set(S.sync.done || []);
+  let changed = false;
+  const now = new Date().toISOString();
+  for (const o of data.objetivos) {
+    if (!o?.id) continue;
+    let g = goal(o.id);
+    if (!g) {
+      if (seen.has(o.id)) continue; // objetivo excluído no aparelho
+      g = { id: o.id, title: String(o.titulo || 'Afazeres').slice(0, 80), description: '',
+        category: CATS.includes(o.categoria) ? o.categoria : CATS[4], result: '', deadline: o.prazo || '',
+        status: 'ativo', priority: 1, steps: [], createdAt: now, synced: true };
+      S.goals.push(g); changed = true;
+    }
+    seen.add(o.id);
+    for (const it of o.itens || []) {
+      if (!it?.id) continue;
+      let s = g.steps.find(x => x.id === it.id);
+      if (!s) {
+        if (seen.has(it.id)) continue; // item excluído no aparelho
+        s = { id: it.id, title: String(it.titulo || ''), hours: Number(it.horas) || 1, done: false,
+          milestone: false, how: [], ok: '', dependsOn: [] };
+        g.steps.push(s); changed = true;
+        if (g.status === 'concluido') g.status = 'ativo';
+      }
+      seen.add(it.id);
+      if (it.feito && !doneApplied.has(it.id)) {
+        doneApplied.add(it.id);
+        if (!s.done) {
+          s.done = true; s.doneAt = now;
+          S.log.push({ goal: g.id, step: s.id, at: now, title: s.title });
+          if (g.steps.every(x => x.done)) { g.status = 'concluido'; g.doneAt = now; }
+        }
+        changed = true;
+      }
+    }
+  }
+  const before = JSON.stringify(S.sync);
+  S.sync.seen = [...seen]; S.sync.done = [...doneApplied];
+  if (changed || before !== JSON.stringify(S.sync)) {
+    persist();
+    if (!document.querySelector('input:focus, textarea:focus, select:focus')) render();
+  }
+}
+
 /* ---------- exportar / importar ---------- */
 function exportData() {
   const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
@@ -814,3 +873,5 @@ function importFile(file) {
 }
 
 render();
+syncFromRepo();
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncFromRepo(); });

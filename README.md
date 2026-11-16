@@ -28,6 +28,17 @@ Em **⚙ Configurações** dá para criar o lembrete da revisão semanal.
 - Para levar de um aparelho a outro: ⚙ → Exportar e, no outro, ⚙ → Importar.
 - No iPhone, use o app instalado na Tela de Início: no Safari comum, o sistema pode apagar dados de sites pouco usados.
 
+## Afazeres sincronizados (`afazeres.json`)
+
+O arquivo `afazeres.json` guarda uma lista de afazeres mantida no repositório. Ao abrir com internet (e ao voltar para o app), o Espiral lê esse arquivo e mescla com os dados do aparelho:
+
+- Item com `id` novo aparece no objetivo **Afazeres**. Nada do aparelho é apagado ou sobrescrito.
+- Item excluído no aparelho não volta.
+- `"feito": true` marca o item como feito uma vez; se você desmarcar no aparelho, vale o que está no aparelho.
+- Tirar um item do arquivo não apaga nada no aparelho.
+
+Para adicionar: inclua `{ "id": "af-algo-unico", "titulo": "...", "horas": 1 }` em `itens`. Não reaproveite `id`.
+
 ## Atualizações
 
 Ao abrir com internet, o app busca a versão mais nova sozinho. Sem internet, abre a última versão salva.
@@ -35,4 +46,5 @@ Ao abrir com internet, o app busca a versão mais nova sozinho. Sem internet, ab
 ## Arquivos
 
 - `index.html`, `styles.css`, `app.js` — o app
+- `afazeres.json` — lista de afazeres que o app mescla ao abrir
 - `manifest.json`, `sw.js`, `icon*.png`, `icon.svg` — instalação e uso offline

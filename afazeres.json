@@ -1,0 +1,20 @@
+{
+  "versao": 1,
+  "atualizado": "2026-11-16",
+  "objetivos": [
+    {
+      "id": "sync-afazeres",
+      "titulo": "Afazeres",
+      "categoria": "Rotina e vida pessoal",
+      "itens": [
+        { "id": "af-industria-criativa", "titulo": "Terminar trabalho de Indústria Criativa com a Sara", "horas": 1 },
+        { "id": "af-linkedin", "titulo": "Fazer o LinkedIn", "horas": 1 },
+        { "id": "af-flashes", "titulo": "Fazer flashes novas", "horas": 1 },
+        { "id": "af-campanhas-nov-dez", "titulo": "Campanhas de novembro e dezembro + deixar posts prontos", "horas": 1 },
+        { "id": "af-portfolio-segunda", "titulo": "Portfólio da aula de segunda-feira", "horas": 1 },
+        { "id": "af-sanso-formulario", "titulo": "Sanso Tattoo: formulário com perguntas", "horas": 1, "feito": true },
+        { "id": "af-sanso-whatsapp", "titulo": "Sanso Tattoo: textinho pra mandar no WhatsApp", "horas": 1 }
+      ]
+    }
+  ]
+}
